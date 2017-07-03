@@ -13,9 +13,10 @@ config.py contains metadata about the project.
 
 ### Contribution guidelines ###
 
-* Writing tests
-* Code review
-* Other guidelines
+#__author__ = "Logan Horowitz, Arik Liber"
+#__copyright__ = "Copyright 2017, Simoti Co"
+#__version__ = "1.0.0"
+#__status__ = "Production"
 
 ### Who do I talk to? ###
 

@@ -2,7 +2,7 @@
 
 #__author__ = "Logan Horowitz, Arik Liber"
 #__copyright__ = "Copyright 2017, Simoti Co"
-#__version__ = "1.0.0"
+#__version__ = "1.0.1"
 #__status__ = "Production"
 
 
@@ -18,7 +18,7 @@ import json
 
 #For datastore access
 #import datastore
-from google.cloud import datastore
+from google.cloud import datastore as datastore
 #import google.cloud.datastore.key
 #import error_reporting
 from google.cloud import error_reporting

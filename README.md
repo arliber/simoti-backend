@@ -21,3 +21,13 @@ config.py contains metadata about the project.
 ### Who do I talk to? ###
 
 simotico@gmail.com
+
+### Search engine
+
+Tutorial: https://developers.google.com/custom-search/json-api/v1/overview
+Key: AIzaSyAx_o3OOlY92fsPUfQaUBzUlXG8-a-Zsm0
+
+Custom search: https://cse.google.com/cse/all
+Engine ID: 000161978559585141097:55s91q7tm4q
+
+https://www.googleapis.com/customsearch/v1?key=AIzaSyAx_o3OOlY92fsPUfQaUBzUlXG8-a-Zsm0&cx=000161978559585141097:55s91q7tm4q&q=ביטקוין

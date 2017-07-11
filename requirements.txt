@@ -1,0 +1,6 @@
+gunicorn==19.7.1
+oauth2client==4.0.0
+newspaper3k==0.2.2
+Flask==0.12.2
+requests==2.18.1
+google-cloud-datastore==1.1.0

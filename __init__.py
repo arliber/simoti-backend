@@ -28,6 +28,8 @@ import google.cloud.logging
 #For scraping
 import newspaper
 from newspaper import Article
+
+import snippets_keywords_builder
 #-----------------------------------------
 
 
@@ -36,7 +38,7 @@ from newspaper import Article
 #scrapes website and returns article content
 def scrape(urlstr, lang):
     art= Article(url=urlstr, language= lang)
-    art.download()    
+    art.download()
     art.parse()
     return art.text
 
@@ -47,14 +49,14 @@ def updateArticleEnt(pID,keyPub, keyNum, content):
     ds = datastore.Client(project= str(pID))
     article_key= datastore.Key("publishers", keyPub,"articles", str(keyNum), project=str(pID))
     article_ent = ds.get(key=article_key)
-    
+
     #Update article's content and status
     article_ent["content"]= content
     article_ent["status"]= "scraped"
-    
+
     #Return updated article to datastore
     ds.put(article_ent)
-    
+
 
 #Sends post request to snippet-matching function
 def initiatePost(content, keyPub, keyNum, lang):
@@ -92,12 +94,24 @@ def create_app(config):
         keyNum = data.get('articleNumber')
         url = data.get('url')
         lang = data.get('language')
-            
+
         if not data or not keyPub or not keyNum or not url or not lang:
             return make_response("Missing Data", 500)
-            
+
         process(config.PROJECT_ID,keyPub, keyNum, url, lang)
         return json.dumps({})
+
+    @app.route('/buildSnippetKeywords', methods=['POST'])
+    def buildSnippetKeywords():
+        data = request.get_json()
+
+        snippetId = data.get('snippetId')
+
+        if not data or not snippetId:
+            return make_response('No snippet id supplied', 404)
+
+        res = snippets_keywords_builder.setSnippetWeightedKeywords(snippetId)
+        return json.dumps({'result': res})
 
     return app
 #-----------------------------------------

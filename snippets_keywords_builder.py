@@ -62,6 +62,7 @@ def scrape(url, language='en'):
   page = Article(url = url, language = language)
   attempts = 0
   success = False
+  # Exception raised following this bug: https://github.com/codelucas/newspaper/issues/357
   while(attempts < 4):
       try:
           attempts += 1

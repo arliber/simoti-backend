@@ -86,8 +86,8 @@ def create_app(config):
     #ADD THIS BACK FOR DEPLOYMENT#client.setup_logging(logging.INFO)
 
     # Receive POST from ad server and begin scrape/snippet matching process
-    @app.route('/', methods=['POST'])
-    def receivePost():
+    @app.route('/scrapeArticle', methods=['POST'])
+    def scrapeArticle():
         data = request.get_json()
 
         keyPub = data.get('publisher')

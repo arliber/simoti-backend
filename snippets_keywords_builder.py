@@ -10,6 +10,7 @@ import operator
 import re
 from google.cloud import datastore
 import json
+from sklearn.feature_extraction import stop_words
 
 # Custom modules
 import config
@@ -31,11 +32,11 @@ def getStopWords(language):
   # Hebrew stop words from: https://github.com/stopwords-iso/stopwords-he
   stopWords = {
     'he': ["אבל","או","אולי","אותה","אותו","אותי","אותך","אותם","אותן","אותנו","אז","אחר","אחרות","אחרי","אחריכן","אחרים","אחרת","אי","איזה","איך","אין","איפה","איתה","איתו","איתי","איתך","איתכם","איתכן","איתם","איתן","איתנו","אך","אל","אלה","אלו","אם","אנחנו","אני","אס","אף","אצל","אשר","את","אתה","אתכם","אתכן","אתם","אתן","באיזומידה","באמצע","באמצעות","בגלל","בין","בלי","במידה","במקוםשבו","ברם","בשביל","בשעהש","בתוך","גם","דרך","הוא","היא","היה","היכן","היתה","היתי","הם","הן","הנה","הסיבהשבגללה","הרי","ואילו","ואת","זאת","זה","זות","יהיה","יוכל","יוכלו","יותרמדי","יכול","יכולה","יכולות","יכולים","יכל","יכלה","יכלו","יש","כאן","כאשר","כולם","כולן","כזה","כי","כיצד","כך","ככה","כל","כלל","כמו","כן","כפי","כש","לא","לאו","לאיזותכלית","לאן","לבין","לה","להיות","להם","להן","לו","לי","לכם","לכן","למה","למטה","למעלה","למקוםשבו","למרות","לנו","לעבר","לעיכן","לפיכך","לפני","מאד","מאחורי","מאיזוסיבה","מאין","מאיפה","מבלי","מבעד","מדוע","מה","מהיכן","מול","מחוץ","מי","מכאן","מכיוון","מלבד","מן","מנין","מסוגל","מעט","מעטים","מעל","מצד","מקוםבו","מתחת","מתי","נגד","נגר","נו","עד","עז","על","עלי","עליה","עליהם","עליהן","עליו","עליך","עליכם","עלינו","עם","עצמה","עצמהם","עצמהן","עצמו","עצמי","עצמם","עצמן","עצמנו","פה","רק","שוב","של","שלה","שלהם","שלהן","שלו","שלי","שלך","שלכה","שלכם","שלכן","שלנו","שם","תהיה","תחת"],
-    'en': 'english'
+    'en': list(stop_words.ENGLISH_STOP_WORDS)
   }
   return stopWords.get(language, 'english') # return specified lanauge if no not found in lookup
 
-def getQueryUrls(query):
+def getQueryUrls(query, language = 'en'):
   ''' Get a list of results URLs for the specified query, using Google Custome Engine
 
   Args:
@@ -45,7 +46,7 @@ def getQueryUrls(query):
     A list of all results links
   '''
   queryUrl = 'https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}'
-  res = req.get(queryUrl.format(config.SEARCHENGINE_KEY, config.SEARCHENGINE_ID, query))
+  res = req.get(queryUrl.format(config.SEARCHENGINES[language]['key'], config.SEARCHENGINES[language]['id'], query))
   queryResults = res.json()
   urls = [item['link'] for item in queryResults['items']]
   return urls
@@ -60,6 +61,7 @@ def scrape(url, language='en'):
   Returns:
     Parsed text if succeeds, empty string otherwise
   '''
+  print('scrape: Scraping url ', url)
   page = Article(url = url, language = language)
   attempts = 0
   success = False
@@ -77,7 +79,7 @@ def scrape(url, language='en'):
 
   return page.text if success else ''
 
-def getTopNFeatures(N, vectorizer, matrix):
+def getTopNFeatures(vectorizer, matrix):
   ''' Get to N features from the sparse TF-IDF matrix
 
   Args:
@@ -93,17 +95,15 @@ def getTopNFeatures(N, vectorizer, matrix):
 
   for i in range(0, matrix.shape[0]):
       row = matrix.getrow(i).toarray()[0].ravel()
-      topIndicies = row.argsort()[-N:]
-      for j in range(0, N):
+      topIndicies = row.argsort()
+      for j in range(0, matrix.shape[1]):
           tempFeature = features[topIndicies[j]]
           topFeatures[tempFeature] = topFeatures.get(tempFeature, 0) + row[topIndicies[j]]
 
   topFeatures = sorted(topFeatures.items(), key = operator.itemgetter(1), reverse=True) # Sort
-  topFeatures = topFeatures[:N] # Return top N items
-
   return topFeatures
 
-def getNGrams(word, articles):
+def getNGrams(word, articles, language='en'):
   ''' Get bigrams and trigrams from articles based on supplied word
 
   Args:
@@ -120,9 +120,13 @@ def getNGrams(word, articles):
   preTrigrams = re.findall('(\\w+\\s+\\w+\\s+{})'.format(word), corpus, re.M|re.I)
   sufTrigram = re.findall('({}\\s+\\w+\\s+\\w+)'.format(word), corpus, re.M|re.I)
 
-  return set(preBigrams + sufBigrams + preTrigrams + sufTrigram) # Convert to a set to remove duplciates
+  nGrams = set(preBigrams + sufBigrams + preTrigrams + sufTrigram)
+  nGrams = [ngram for ngram in nGrams if re.findall('(\\w+)', ngram, re.M|re.I)[-1] not in getStopWords(language)]
+  nGrams = [ngram for ngram in nGrams if re.findall('(\\w+)', ngram, re.M|re.I)[0] not in getStopWords(language)]
 
-def getPhrases(features, articles):
+  return set(nGrams) # Convert to a set to remove duplciates
+
+def getPhrases(features, articles, language='en'):
   ''' Get a dictionary of frequency and ngrams
 
   Args:
@@ -134,7 +138,7 @@ def getPhrases(features, articles):
   '''
   phrases = {}
   for i in range(0, len(features)):
-      phrases[features[i][1]] = phrases.get(features[i][1], set()) | getNGrams(features[i][0], articles)
+      phrases[features[i][1]] = phrases.get(features[i][1], set()) | getNGrams(features[i][0], articles, language)
 
   return phrases
 
@@ -158,11 +162,21 @@ def saveSnippetKeywords(snippet, weightedNGrams):
     snippet (entity): Snippet entity to udpate
     weightedNGrams (dictionary): Dicionary of weight and N-Grams
   '''
+
+  ''' # Save as an embedded entity
   snippet['calculatedKeywords'] = datastore.Entity(key=ds.key('calculatedKeywords'))
   for weight in weightedNGrams:
       for nGram in weightedNGrams[weight]:
-          snippet['calculatedKeywords'][nGram] = weight
+          snippet['calculatedKeywords'][nGram] = weight '''
 
+  # Save as two seperate fields
+  snippet['wordPouch'] = []
+  snippet['wordPouchScores'] = []
+  for weight in weightedNGrams:
+    for nGram in weightedNGrams[weight]:
+      snippet['wordPouch'] = snippet['wordPouch'] + [nGram]
+      snippet['wordPouchScores'] = snippet['wordPouchScores'] + [weight]
+  
   ds.put(snippet)
 
 
@@ -182,19 +196,19 @@ def resultSummary(weightedNGrams, snippetId):
       len(weightedNGrams),
       snippetId)
 
-def inspectMatrix(TfIdfMatrix, vectorizer, urls):
+def inspectMatrix(TfIdfMatrix, vectorizer):
   features = vectorizer.get_feature_names()
-  print('Built matrix with {} features'.format(len(features)))
+  print('Built matrix with {} features: '.format(len(features)), features)
   
   row = TfIdfMatrix.toarray()[0]
   index = np.argmax(row)
   
   print('Matrix shape: ', TfIdfMatrix.shape)
-  print('Most popular item is', features[index], 'with value', row[index] , 'at index', index, ' for ', urls[1])
+  print('Most popular item is', features[index], 'with value', row[index] , 'at index', index)
 
 
 def setSnippetWeightedKeywords(snippetId):
-  ''' Find, weights and save related bigrams and trigrams for selected snipept
+  ''' Find, weight and save related bigrams and trigrams for selected snipept
 
   Args:
     snippetId (int): Snippet ID
@@ -205,24 +219,33 @@ def setSnippetWeightedKeywords(snippetId):
   snippet = getSnippetById(snippetId)
   print('Found snippet id [', snippetId, ']')
 
-  urls = getQueryUrls(snippet['title'])
+  urls = getQueryUrls(snippet['title'], snippet['language'])
   print('Found {} search results for [{}]'.format(len(urls), snippet['title']))
+  print(urls)
 
-  articles = [scrape(url, snippet['language']) for url in urls]
+  articles = [scrape(url, snippet['language']) for url in urls if not re.compile(r'\.pdf$', re.M|re.I).search(url)]
   print('Scraped {} articles'.format(len(articles)))
 
   if len(articles):
       # Build TF-IDF matrix
       stopWords = getStopWords(snippet['language'])
-      vectorizer = TfidfVectorizer(max_df=0.5, min_df=2, stop_words = stopWords)
+      vectorizer = TfidfVectorizer(max_df=0.5, 
+                                   min_df=0.1, 
+                                   ngram_range=(1, 3),
+                                   lowercase=True,
+                                   max_features=10,
+                                   stop_words = stopWords)
       TfIdfMatrix = vectorizer.fit_transform(articles)
 
-      inspectMatrix(TfIdfMatrix, vectorizer, urls)
+      inspectMatrix(TfIdfMatrix, vectorizer)
 
-      topFeatures = getTopNFeatures(8, vectorizer, TfIdfMatrix)
+      topFeatures = getTopNFeatures(vectorizer, TfIdfMatrix)
       print('Top features are:', topFeatures)
 
-      weightedNGrams = getPhrases(topFeatures, articles)
+      topFeaturesNormalized = [(feature[0],feature[1]/topFeatures[0][1]) for feature in topFeatures]
+      print('Top features normazlied:', topFeaturesNormalized)
+
+      weightedNGrams = getPhrases(topFeaturesNormalized, articles, snippet['language'])
       # print('N grams:', weightedNGrams)
 
       saveSnippetKeywords(snippet, weightedNGrams)
@@ -233,4 +256,4 @@ def setSnippetWeightedKeywords(snippetId):
 
 # Exectue if run independantly
 if __name__ == '__main__':
-  print(setSnippetWeightedKeywords(5659313586569216))
+  print(setSnippetWeightedKeywords(5091364022779904))

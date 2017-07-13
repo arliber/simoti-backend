@@ -14,5 +14,8 @@ DATA_BACKEND = 'datastore'
 # https://console.developers.google.com
 PROJECT_ID = 'simoti-171512'
 
-SEARCHENGINE_KEY = 'AIzaSyAx_o3OOlY92fsPUfQaUBzUlXG8-a-Zsm0'
-SEARCHENGINE_ID = '000161978559585141097:55s91q7tm4q'
+SEARCHENGINES = { 'he': {}, 'en': {} }
+SEARCHENGINES['he']['key'] = 'AIzaSyAx_o3OOlY92fsPUfQaUBzUlXG8-a-Zsm0'
+SEARCHENGINES['he']['id'] = '000161978559585141097:55s91q7tm4q'
+SEARCHENGINES['en']['key'] = 'AIzaSyAx_o3OOlY92fsPUfQaUBzUlXG8-a-Zsm0'
+SEARCHENGINES['en']['id'] = '000161978559585141097:ueqmvvi3cc0'

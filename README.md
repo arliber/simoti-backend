@@ -10,6 +10,21 @@ Logan Horowitz, Arik Liber
 
 Simoti Co.
 
+## Deploy
+
+`gcloud app deploy`
+
+## TO DO
+
+- Normalize TF-IDF score
+- Process body content, credit lines etc. ???
+
+## FAQ
+
+Q: I get 403 when trying to query the datastore
+
+A: Run `export GOOGLE_APPLICATION_CREDENTIALS=/Users/leoliber/Repos/simoti/ad-server/keyfile.json`
+
 # Notes
 
 ## Search engine

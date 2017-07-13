@@ -23,15 +23,15 @@ app.config.from_object(config)
 def scrapeArticle():
   data = request.get_json()
 
-  keyPub = data.get('publisher')
-  keyNum = data.get('articleNumber')
-  url = data.get('url')
-  lang = data.get('language')
+  publisherId = data.get('publisherId')
+  articleId = data.get('articleId')
+  articleUrl = data.get('articleUrl')
+  language = data.get('language')
 
-  if not data or not keyPub or not keyNum or not url or not lang:
-      return make_response('Missing data for scraper', 500)
+  if not data or not publisherId or not articleId or not articleUrl or not language:
+      return make_response('Missing data', 400)
 
-  article = article_scraper.process(keyPub, keyNum, url, lang)
+  article = article_scraper.process(publisherId, articleId, articleUrl, language)
   return json.dumps({'article': article})
 
 @app.route('/buildSnippetKeywords', methods=['POST'])
@@ -62,6 +62,3 @@ def createTags():
 # the application.
 if __name__ == '__main__':
   app.run(host='127.0.0.1', port=8080, debug=True)
-
-
-  

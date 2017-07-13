@@ -7,9 +7,9 @@ import json
 import config
 import article_scraper
 import snippets_keywords_builder
+import tag_creator
 
 
-#TODO: adjust Flask input arg to reflect package or move all to one file
 app = Flask(__name__)
 app.config.from_object(config)
 
@@ -29,7 +29,7 @@ def scrapeArticle():
   lang = data.get('language')
 
   if not data or not keyPub or not keyNum or not url or not lang:
-      return make_response("Missing Data", 500)
+      return make_response('Missing data for scraper', 500)
 
   article = article_scraper.process(keyPub, keyNum, url, lang)
   return json.dumps({'article': article})
@@ -44,9 +44,21 @@ def buildSnippetKeywords():
   res = snippets_keywords_builder.setSnippetWeightedKeywords(snippetId)
   return json.dumps({'summary': res})
 
+@app.route('/createTags', methods=['POST'])
+def createTags():
+  data = request.get_json()
+  topTag = data.get('topTag')
+  if not data or not topTag:
+      return make_response('No starting tag supplied', 500)
+
+  tag_creator.parseXML(str(topTag))
+  res= "Created tags for tree below " + str(topTag)
+  return json.dumps({'summary': res})
+
 
 # This is only used when running locally. When running live, gunicorn runs
 # the application.
 if __name__ == '__main__':
   app.run(host='127.0.0.1', port=8080, debug=True)
+
   

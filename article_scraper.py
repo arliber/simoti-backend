@@ -36,19 +36,18 @@ def scrape(url, language='en'):
   return page.text if success else ''
 
 #Update article entity by adding scraped content
-def updateArticleEnt(keyPub, keyNum, content):
+def updateArticleEnt(publisherId, articleId, content):
   #Retrieve article from Google Cloud Datastore
   ds = datastore.Client(project= str(config.PROJECT_ID))
-  article_key= datastore.Key("publishers", keyPub,"articles", str(keyNum), project=str(config.PROJECT_ID))
+  article_key = datastore.Key("publishers", publisherId, "articles", str(articleId), project=str(config.PROJECT_ID))
   article_ent = ds.get(key=article_key)
 
   #Update article's content and status
   article_ent["content"]= content
-  article_ent["status"]= "scraped"
+  article_ent["status"] = "scraped"
 
   #Return updated article to datastore
   ds.put(article_ent)
-
 
 #Sends post request to snippet-matching function
 def initiatePost(content, keyPub, keyNum, lang):
@@ -56,14 +55,22 @@ def initiatePost(content, keyPub, keyNum, lang):
   requests.post('smart_function_url', data = {"content": content,"publisher": keyPub, "articleNumber": keyNum, "lang": lang})
 
 
-'''Scrapes the article, updates the Article entity in datastore, and then
-initiates smart snippet-matching function'''
-def process(keyPub, keyNum, url, lang):
-  content = scrape(url, lang)
-  updateArticleEnt(keyPub,keyNum, content)
+
+def process(publisherId, articleId, articleUrl, language):
+  '''Scrapes the article, updates the Article entity in datastore, and then initiates smart snippet-matching function
+
+  Args:
+    TBD
+  
+  Returns:
+    TBD
+  '''
+  content = scrape(articleUrl, language)
+  updateArticleEnt(publisherId, articleId, content)
   #initiatePost(content, keyPub, keyNum, lang)
   return content
 
 # Exectue if run independantly
 if __name__ == '__main__':
-  print(process('gadgety.co.il', 183738, 'http://www.gadgety.co.il/183738/spiderman-homecoming-review/', 'he'))
+  # print(process('gadgety.co.il', '183738', 'http://www.gadgety.co.il/183738/spiderman-homecoming-review/', 'he'))
+  print(process('martech.zone', 'randy-stocklin-ecommerce', 'https://martech.zone/randy-stocklin-ecommerce/', 'en'))

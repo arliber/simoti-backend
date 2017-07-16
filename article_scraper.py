@@ -1,39 +1,20 @@
 #!/usr/bin/env python
+# coding=utf8
 
-import config
+# Add common fodler to modules path
+import sys
+sys.path.append('./common')
+
 import logging
 import requests
 from google.cloud import datastore
 from google.cloud import error_reporting
 import google.cloud.logging
-from newspaper import Article
 
-def scrape(url, language='en'):
-  ''' Scrape given url using supplied or default language
+# Custom modules
+import config
+from helpers import scrape
 
-  Args:
-    url (str): Article's URL for parsing
-    language (str, optional): Language to parse in. Defaults to 'en'
-
-  Returns:
-    Parsed text if succeeds, empty string otherwise
-  '''
-  page = Article(url = url, language = language)
-  attempts = 0
-  success = False
-  # Exception raised following this bug: https://github.com/codelucas/newspaper/issues/357
-  while(attempts < 4):
-      try:
-          attempts += 1
-          page.download()
-          page.parse()
-          success = True
-          break
-      except BaseException as e:
-          print('Error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
-          pass
-
-  return page.text if success else ''
 
 #Update article entity by adding scraped content
 def updateArticleEnt(publisherId, articleId, content):

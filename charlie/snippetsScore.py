@@ -40,14 +40,6 @@ def getScore(publisherId, articleId):
   article = getArticleById(publisherId, articleId)
   (freq, feat) = getFrequencyMatrix([article['content']], 'en') # TODO: Save and get language from article! (not publihser)
 
-
-  #### TESTS ####
-  # TODO: Remove that!
-  feat.append('MaaS ecosystem')
-  freq = np.append(freq, 1)
-  #### TESTS ####
-
-
   # Create feature: value dictionary
   articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))} 
 
@@ -73,4 +65,4 @@ def getScore(publisherId, articleId):
   return scoredSnippets
 
 if __name__ == '__main__':
-  print(getScore('martech.zone', 'ecommerce-shipping-options'))
+  print(getScore('martech.zone', 'randy-stocklin-ecommerce'))

@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from flask import current_app, Flask, redirect, url_for, request
+from flask import current_app, Flask, redirect, url_for, request, Response
 import requests
 import json
 
 import config
 import article_scraper
 import snippets_keywords_builder
-import tag_creator
-
+from tags import tag_creator
+from charlie import Charlie
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -29,7 +29,7 @@ def scrapeArticle():
   language = data.get('language')
 
   if not data or not publisherId or not articleId or not articleUrl or not language:
-      return make_response('Missing data', 400)
+      return Response(response= 'Missing data', status= 400)
 
   article = article_scraper.process(publisherId, articleId, articleUrl, language)
   return json.dumps({'article': article})
@@ -39,7 +39,7 @@ def buildSnippetKeywords():
   data = request.get_json()
   snippetId = data.get('snippetId')
   if not data or not snippetId:
-      return make_response('No snippet id supplied', 404)
+      return Response(response= 'No snippet id supplied', status=404)
 
   res = snippets_keywords_builder.setSnippetWeightedKeywords(snippetId)
   return json.dumps({'summary': res})
@@ -49,13 +49,25 @@ def createTags():
   data = request.get_json()
   topTag = data.get('topTag')
   if not data or not topTag:
-      return make_response('No starting tag supplied', 500)
+      return Response(response= 'No starting tag supplied', status=500)
 
   badTags= tag_creator.parseXML(str(topTag))
   badStr= ''
   for tag in badTags:
       badStr+= str(tag) + ' '
   return json.dumps({'badTags': badStr})
+
+@app.route('/charlie', methods=['POST'])
+def charlie():
+  data = request.args
+  articleId = data.get('articleId')
+  publisherId = data.get('publisherId')
+  language = data.get('lang')
+  if not data or not articleId or not publisherId or not language:
+      return Response(response='Incorrect data supplied to charlie', status=500)
+
+  success= Charlie.computeFinalScores(articleId, publisherId, language)
+  return json.dumps({"success": success})
 
 
 # This is only used when running locally. When running live, gunicorn runs

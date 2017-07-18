@@ -8,7 +8,7 @@ def getStopWords(language):
 
   Args:
     lanaguage (str): 2 characters language name
-  
+
   Returns:
     lanaguage parameter if not found in lookup
     else returns a list of stop words
@@ -47,4 +47,4 @@ def scrape(url, language='en'):
           print('Error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
           pass
 
-  return page.text if success else ''
+  return (page.text, page.title) if success else ('','')

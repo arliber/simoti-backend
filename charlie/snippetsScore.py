@@ -33,11 +33,11 @@ def getScoredDicionary(snippets):
           snippetsDict[featureName][i] = snippets[i]['wordPouchScores'][j]
   return snippetsDict
 
-def getScore(publisherId, articleId):
+def getScore(publisherId, articleId, language):
 
   # Handle article
   article = getArticleById(publisherId, articleId)
-  (freq, feat) = getFrequencyMatrix([article['content']], 'en') # TODO: Save and get language from article! (not publihser)
+  (freq, feat) = getFrequencyMatrix([article['content']], language)
 
   # Create feature: value dictionary
   articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))}

@@ -6,7 +6,6 @@ import sys
 sys.path.append('./')
 sys.path.append('../')
 
-import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction import stop_words
 import numpy as np
@@ -25,7 +24,7 @@ def getFrequencyMatrix(article, language='en'):
   return (TfIdfMatrix.toarray()[0], vectorizer.get_feature_names())
 
 
-def getScoredDicionary(snippets):   
+def getScoredDicionary(snippets):
   snippetsDict = {}
   for i in range(0, len(snippets)):
       for j in range(0, len(snippets[i]['wordPouch'])):
@@ -41,7 +40,7 @@ def getScore(publisherId, articleId):
   (freq, feat) = getFrequencyMatrix([article['content']], 'en') # TODO: Save and get language from article! (not publihser)
 
   # Create feature: value dictionary
-  articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))} 
+  articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))}
 
   # Handle the snippets
   snippets = getSnippets()

@@ -4,7 +4,10 @@
 """Parses xml tree of tags, finds corresponding wordPouch on Twitter
     and adds these to GC datastore as tags entities"""
 
+# Add common folder to modules path
 import sys
+sys.path.append('./')
+
 import re
 import config
 import bs4
@@ -16,6 +19,8 @@ from nltk.probability import FreqDist
 from heapq import nlargest
 from collections import defaultdict
 from decimal import *
+
+from common import DAL
 
 badTags= []     #List of tags which did not return enough entries
 n= 20           #Number of top words we will save
@@ -78,17 +83,41 @@ def searchTwitter(tag0, tag1):
         query= str(tag0) + " #" + str(tag0)
     else:
         query= str(tag0) + " #" + str(tag0) + " " + str(tag1) + " #" + str(tag1)
-    print(query)        #For debugging only
+    #print(query)        #For debugging only
 
     results = api.search(q=query, lang='en', result_type='mixed', count= 500)
     textfile= str(tag0) + "," + str(tag1) + ".txt"  #For debugging only
     return extractPouch(tag0, tag1, results, textfile)
 
 
+def createCustomTag(tagName):
+    global n
+    global c
+    global badtags
+
+    wordPouch= searchTwitter(tagName, None)   #Retrieve Twitter wordPouch
+
+    if len(wordPouch[0]) < 10:
+        #This is a bad tag
+        return None
+    else:
+        #Create tag entity and save it in datastore
+        #ds = datastore.Client(project= str(config.PROJECT_ID))     #Setup datastore access
+        #tag_key= datastore.Key("tags", tagName, project=str(config.PROJECT_ID))
+        tag_key= datastore.Key("tags", 'CUSTOM',"tags", tagName, project=config.PROJECT_ID)
+        tag_ent= datastore.Entity(key= tag_key)
+        tag_ent["language"]= "en"
+        tag_ent["wordPouch"]= wordPouch[0]
+        tag_ent["wordPouchScores"]= wordPouch[1]
+        DAL.saveEntity(tag_ent)
+        return tag_ent
+
+
+
 # Recursive function to find which tags to add
 # Calls searchTwitter to get wordPouch for these tags
 # Adds tags and associated wordPouch to GC datastore
-def createTag(parent):
+def createTagFromTree(parent):
     global n
     global c
     global badtags
@@ -112,16 +141,15 @@ def createTag(parent):
                     badtags.append(badTag)
                 else:
                     #Create tag entity and save it in datastore
-                    ds0 = datastore.Client(project= str(config.PROJECT_ID))     #Setup datastore access
                     child_key= datastore.Key("tags", pname,"tags", cname, project=str(config.PROJECT_ID))
                     ctag_ent= datastore.Entity(key= child_key)
                     ctag_ent["language"]= "en"
                     ctag_ent["wordPouch"]= wordpouchchild[0]
                     ctag_ent["wordPouchScores"]= wordpouchchild[1]
-                    ds0.put(ctag_ent)
+                    DAL.saveEntity(ctag_ent)
             else:
             #Invariant: Child is not in deepest layer so we need to recurse
-                createTag(child)
+                createTagFromTree(child)
 
     if addParent:
         wordpouchparent= searchTwitter(pname, None)
@@ -131,13 +159,12 @@ def createTag(parent):
             badtags.append(parent.name)
         else:
             #Create tag entity and save it in datastore
-            ds1 = datastore.Client(project= str(config.PROJECT_ID))
             parent_key= datastore.Key("tags", parent.name, project=str(config.PROJECT_ID))
             ptag_ent= datastore.Entity(key= parent_key)
             ptag_ent["language"]= "en"
             ptag_ent["wordPouch"]= wordpouchparent[0]
             ptag_ent["wordPouchScores"]= wordpouchparent[1]
-            ds1.put(ptag_ent)
+            DAL.saveEntity(ptag_ent)
 
 
 # Parse Tags.xml and call createTag to add tags entities to GC datastore
@@ -145,5 +172,5 @@ def parseXML(topTag):
     global badTags
     with open("Tags.xml") as fp:
         soup = BS(fp, "lxml")
-        createTag(getattr(soup, topTag))
+        createTagFromTree(getattr(soup, topTag))
     return badTags

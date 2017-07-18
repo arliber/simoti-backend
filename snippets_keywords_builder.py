@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import scipy
 import operator
-import re
+import regex as re
 import json
 
 # Custom modules
@@ -59,7 +59,7 @@ def getTopNFeatures(vectorizer, matrix):
   topFeatures = sorted(topFeatures.items(), key = operator.itemgetter(1), reverse=True) # Sort
   return topFeatures
 
-def getNGrams(word, articles, language='en'):
+def getNGrams(word, corpus, language='en'):
   ''' Get bigrams and trigrams from articles based on supplied word
 
   Args:
@@ -69,18 +69,20 @@ def getNGrams(word, articles, language='en'):
   Returns:
     A set of all bigrams and trigrams in articles
   '''
-  corpus = ','.join(articles)
+  
+  preBigrams = re.findall(r'(\p{L}+\s+'+re.escape(word)+r')', corpus, re.M|re.I)
+  sufBigrams = re.findall(r'('+re.escape(word)+r'\s+\p{L}+)', corpus, re.M|re.I)
+  preTrigrams = re.findall(r'(\p{L}+\s+\p{L}+\s+'+re.escape(word)+r')', corpus, re.M|re.I)
+  sufTrigram = re.findall(r'('+re.escape(word)+r'\s+\p{L}+\s+\p{L}+)', corpus, re.M|re.I)
 
-  preBigrams = re.findall('(\\w+\\s+{})'.format(word), corpus, re.M|re.I)
-  sufBigrams = re.findall('({}\\s+\\w+)'.format(word), corpus, re.M|re.I)
-  preTrigrams = re.findall('(\\w+\\s+\\w+\\s+{})'.format(word), corpus, re.M|re.I)
-  sufTrigram = re.findall('({}\\s+\\w+\\s+\\w+)'.format(word), corpus, re.M|re.I)
+  nGrams = preBigrams + sufBigrams + preTrigrams + sufTrigram
+  nGrams = [ngram for ngram in nGrams if re.findall(r'(\w+)', ngram, re.M|re.I)[-1] not in getStopWords(language)]
+  nGrams = [ngram for ngram in nGrams if re.findall(r'(\w+)', ngram, re.M|re.I)[0] not in getStopWords(language)]
 
-  nGrams = set(preBigrams + sufBigrams + preTrigrams + sufTrigram)
-  nGrams = [ngram for ngram in nGrams if re.findall('(\\w+)', ngram, re.M|re.I)[-1] not in getStopWords(language)]
-  nGrams = [ngram for ngram in nGrams if re.findall('(\\w+)', ngram, re.M|re.I)[0] not in getStopWords(language)]
+  duplicateNGrams = set([x for x in nGrams if nGrams.count(x) > 1])
+  uniqueNGrams = set(nGrams)
 
-  return set(nGrams) # Convert to a set to remove duplciates
+  return (duplicateNGrams, uniqueNGrams)
 
 def getPhrases(features, articles, language='en'):
   ''' Get a dictionary of frequency and ngrams
@@ -92,9 +94,21 @@ def getPhrases(features, articles, language='en'):
   Returns:
     A dictionary of weights and N-Grams
   '''
+
+  # Build corpus based on scraped articles and clean it
+  corpus = ','.join(articles).lower()
+  corpus = re.sub(r'(\n)+', ' ', corpus)
+
   phrases = {}
   for i in range(0, len(features)):
-      phrases[features[i][1]] = phrases.get(features[i][1], set()) | getNGrams(features[i][0], articles, language)
+      
+      originalScore = features[i][1]
+      loweredScore = originalScore * config.snippetsKeywordsBuilder['nGramsToDupNgramsRation']
+
+      (duplicateNGrams, uniqueNGrams) = getNGrams(features[i][0], corpus, language)
+      
+      phrases[originalScore] = phrases.get(originalScore, set()) | duplicateNGrams
+      phrases[loweredScore] = phrases.get(loweredScore, set()) | uniqueNGrams
 
   return phrases
 
@@ -135,7 +149,7 @@ def resultSummary(weightedNGrams, snippetId):
     String with summary
   '''
   ngramsCount = [len(weightedNGrams[k]) for k in list(weightedNGrams.keys())]
-  return 'Saved {} N-Grams based on {} top words for snippet {}'.format(
+  return 'Saved {} N-Grams based on {} weights for snippet {}'.format(
       sum(ngramsCount),
       len(weightedNGrams),
       snippetId)
@@ -173,12 +187,12 @@ def setSnippetWeightedKeywords(snippetId):
   if len(articles):
       # Build TF-IDF matrix
       stopWords = getStopWords(snippet['language'])
-      vectorizer = TfidfVectorizer(max_df=0.5, 
-                                   min_df=0.1, 
+      vectorizer = TfidfVectorizer(max_df=0.6, 
+                                   min_df=0.2, 
                                    ngram_range=(1, 3),
                                    lowercase=True,
-                                   max_features=10,
-                                   stop_words = stopWords)
+                                   max_features=config.snippetsKeywordsBuilder['maxFeatures'],
+                                   stop_words=stopWords)
       TfIdfMatrix = vectorizer.fit_transform(articles)
 
       inspectMatrix(TfIdfMatrix, vectorizer)
@@ -200,4 +214,4 @@ def setSnippetWeightedKeywords(snippetId):
 
 # Exectue if run independantly
 if __name__ == '__main__':
-  print(setSnippetWeightedKeywords(5091364022779904))
+  print(setSnippetWeightedKeywords(5700305828184064)) #5682617542246400

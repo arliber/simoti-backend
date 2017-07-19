@@ -67,7 +67,7 @@ def getScore(publisherId, articleId, language):
         scoredSnippets[snippetId]['contentScore'] = scoredSnippets[snippetId].get('contentScore', 0) + keyScore
         scoredSnippets[snippetId]['commonWords'] = scoredSnippets[snippetId].get('commonWords', set()) | {key}
 
-    # Scroe title
+    # Score title
     for key in articleTitleDict.keys():
       keyScore = articleTitleDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
       if(keyScore > 0):

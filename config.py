@@ -16,6 +16,11 @@ SEARCHENGINES['he']['id'] = '000161978559585141097:55s91q7tm4q'
 SEARCHENGINES['en']['key'] = 'AIzaSyAx_o3OOlY92fsPUfQaUBzUlXG8-a-Zsm0'
 SEARCHENGINES['en']['id'] = '000161978559585141097:ueqmvvi3cc0'
 
+# Snippets keywords builder
+snippetsKeywordsBuilder = { }
+snippetsKeywordsBuilder['maxFeatures'] = 12
+snippetsKeywordsBuilder['nGramsToDupNgramsRation'] = 0.7
+
 # Twitter API Access Values
 consumer_key = '5We5CMiZamhDR0AzAeVlSq8jk'
 consumer_secret = 'mnYfyCqJC0hEqw9Xw2DZJPz9r97DYBWbA3hK98EY69c2YfGcsV'

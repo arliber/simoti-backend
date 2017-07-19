@@ -59,14 +59,15 @@ def createTags():
 
 @app.route('/charlie', methods=['POST'])
 def charlie():
-  data = request.args
-  articleId = data.get('articleId')
-  publisherId = data.get('publisherId')
-  language = data.get('lang')
+  data= request.get_json()
+  articleId= data.get('articleId')
+  publisherId= data.get('publisherId')
+  language= data.get('lang')
+
   if not data or not articleId or not publisherId or not language:
       return Response(response='Incorrect data supplied to charlie', status=500)
 
-  success= Charlie.computeFinalScores(articleId, publisherId, language)
+  success= Charlie.makeSnippetSelection(articleId, publisherId, language)
   return json.dumps({"success": success})
 
 

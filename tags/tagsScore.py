@@ -6,31 +6,15 @@ import sys
 sys.path.append('./')
 sys.path.append('../')
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction import stop_words
-import numpy as np
-
 # Custom modules
-from common.DAL import getSnippets, retrievePouches, getArticleById
-
-
-#Create tf matrix for an article
-def getFrequencyMatrix(article, language='en'):
-  stopWords = getStopWords(language)
-  vectorizer = TfidfVectorizer(ngram_range=(1, 3),
-                                  lowercase=True,
-                                  max_features=None,
-                                  stop_words = stopWords)
-  TfIdfMatrix = vectorizer.fit_transform(article)
-  return (TfIdfMatrix.toarray()[0], vectorizer.get_feature_names())
+from common.DAL import retrievePouches
 
 
 # Returns tags for all active snippets
 # tagsArray[i] contains an array of tags for the i'th snippet
-def retrieveTags():
+def retrieveTags(snippets):
     snipIDs=[]
     tagsArray=[]    #Each bin holds a taglist array of tag words
-    snippets = getSnippets()
     for snip in snippets:
         taglist=[]      #Each bin holds a tag
         tags= snip['tags']
@@ -41,19 +25,11 @@ def retrieveTags():
     return (tagsArray, snipIDs)
 
 
-def getTagScores(publisherId, articleId, lang):
-
-    # Create dictionaries from article entity
-    article = getArticleById(publisherId, articleId)
-    articleTitle= article['title']
-    (freq, feat) = getFrequencyMatrix([article['content']], lang)
-    (tfreq, tfeat) = getFrequencyMatrix([article['content']], lang)
-    articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))}
-    titleDict = {tfeat[i]: tfreq[i] for i in range(0, min(len(tfeat), len(tfreq)))}
+def getTagScores(snippets, articleDict, titleDict):
 
     # Compute score for each snippet based on tags
     snippetScores=[]
-    (tagsArray, snipIDs)= retrieveTags()
+    (tagsArray, snipIDs)= retrieveTags(snippets)
     for taglist in tagsArray:
         #Iterating through snippets
 

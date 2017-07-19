@@ -28,8 +28,7 @@ def updateArticleEnt(publisherId, articleId, content, title):
 
 #Sends post request to snippet-matching function
 def initiatePost(articleId, publisherId, lang):
-  requests.post('https://simoti-171512.appspot.com/charlie', data = {"articleId": articleId,"publisherId": publisherId, "lang": lang})
-
+    requests.post('https://simoti-171512.appspot.com/charlie', json = {"articleId": articleId,"publisherId": publisherId, "lang": lang})
 
 def process(publisherId, articleId, articleUrl, language):
   '''Scrapes the article, updates the Article entity in datastore, and then initiates smart snippet-matching function
@@ -51,4 +50,4 @@ def process(publisherId, articleId, articleUrl, language):
 # Execute if run independantly
 if __name__ == '__main__':
   # print(process('gadgety.co.il', '183738', 'http://www.gadgety.co.il/183738/spiderman-homecoming-review/', 'he'))
-  print(process('martech.zone', 'randy-stocklin-ecommerce', 'https://martech.zone/randy-stocklin-ecommerce/', 'en'))
+  process('martech.zone', 'randy-stocklin-ecommerce', 'https://martech.zone/randy-stocklin-ecommerce/', 'en')

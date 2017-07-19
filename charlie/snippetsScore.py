@@ -1,28 +1,6 @@
 #!/usr/bin/env python
 # coding=utf8
 
-# Add common fodler to modules path
-import sys
-sys.path.append('./')
-sys.path.append('../')
-
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction import stop_words
-import numpy as np
-
-# Custom modules
-from common.helpers import getStopWords
-from common.DAL import getArticleById, getSnippets
-
-def getFrequencyMatrix(article, language='en'):
-  stopWords = getStopWords(language)
-  vectorizer = TfidfVectorizer(ngram_range=(1, 3),
-                                  lowercase=True,
-                                  max_features=None,
-                                  stop_words = stopWords)
-  TfIdfMatrix = vectorizer.fit_transform(article)
-  return (TfIdfMatrix.toarray()[0], vectorizer.get_feature_names())
-
 
 def getScoredDicionary(snippets):
   snippetsDict = {}
@@ -31,19 +9,13 @@ def getScoredDicionary(snippets):
           featureName = snippets[i]['wordPouch'][j]
           snippetsDict[featureName] = snippetsDict.get(featureName, [0] * len(snippets))
           snippetsDict[featureName][i] = snippets[i]['wordPouchScores'][j]
+
   return snippetsDict
 
-def getScore(publisherId, articleId, language):
 
-  # Handle article
-  article = getArticleById(publisherId, articleId)
-  (freq, feat) = getFrequencyMatrix([article['content']], language)
-
-  # Create feature: value dictionary
-  articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))}
+def getScore(snippets, articleContentDict, articleTitleDict):
 
   # Handle the snippets
-  snippets = getSnippets()
   snippetsDict = getScoredDicionary(snippets)
 
   # Common words between all snippets
@@ -54,14 +26,25 @@ def getScore(publisherId, articleId, language):
   scoredSnippets = {}
   for i in range(0, len(snippets)):
     snippetId = snippets[i].key.id
-    for key in articleDict.keys():
-      keyScore = articleDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
+
+    # Score content
+    for key in articleContentDict.keys():
+      keyScore = articleContentDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
       if(keyScore > 0):
         scoredSnippets[snippetId] = scoredSnippets.get(snippetId, {})
-        scoredSnippets[snippetId]['score'] = scoredSnippets[snippetId].get('score', 0) + keyScore
+        scoredSnippets[snippetId]['contentScore'] = scoredSnippets[snippetId].get('contentScore', 0) + keyScore
+        scoredSnippets[snippetId]['commonWords'] = scoredSnippets[snippetId].get('commonWords', set()) | {key}
+
+    # Score title
+    for key in articleTitleDict.keys():
+      keyScore = articleTitleDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
+      if(keyScore > 0):
+        scoredSnippets[snippetId] = scoredSnippets.get(snippetId, {})
+        scoredSnippets[snippetId]['titleScore'] = scoredSnippets[snippetId].get('titleScore', 0) + keyScore
         scoredSnippets[snippetId]['commonWords'] = scoredSnippets[snippetId].get('commonWords', set()) | {key}
 
   return scoredSnippets
 
+
 if __name__ == '__main__':
-  print(getScore('martech.zone', 'randy-stocklin-ecommerce'))
+  print(getScore('martech.zone', 'randy-stocklin-ecommerce', 'en'))

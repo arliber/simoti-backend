@@ -21,6 +21,7 @@ def getFrequencyMatrix(article, language='en'):
                                   max_features=None,
                                   stop_words = stopWords)
   TfIdfMatrix = vectorizer.fit_transform(article)
+
   return (TfIdfMatrix.toarray()[0], vectorizer.get_feature_names())
 
 
@@ -31,6 +32,7 @@ def getScoredDicionary(snippets):
           featureName = snippets[i]['wordPouch'][j]
           snippetsDict[featureName] = snippetsDict.get(featureName, [0] * len(snippets))
           snippetsDict[featureName][i] = snippets[i]['wordPouchScores'][j]
+
   return snippetsDict
 
 
@@ -76,6 +78,7 @@ def getScore(publisherId, articleId, language):
         scoredSnippets[snippetId]['commonWords'] = scoredSnippets[snippetId].get('commonWords', set()) | {key}
 
   return scoredSnippets
+
 
 if __name__ == '__main__':
   print(getScore('martech.zone', 'randy-stocklin-ecommerce', 'en'))

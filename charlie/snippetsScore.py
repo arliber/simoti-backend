@@ -33,14 +33,18 @@ def getScoredDicionary(snippets):
           snippetsDict[featureName][i] = snippets[i]['wordPouchScores'][j]
   return snippetsDict
 
+
 def getScore(publisherId, articleId, language):
 
   # Handle article
   article = getArticleById(publisherId, articleId)
-  (freq, feat) = getFrequencyMatrix([article['content']], language)
+  (contentFreq, contentFeat) = getFrequencyMatrix([article['content']], language) # Article body
+  (titleFreq, titleFeat) = getFrequencyMatrix([article['title']], language) # Article title
+  print('titleFeat', titleFeat)
 
-  # Create feature: value dictionary
-  articleDict = {feat[i]: freq[i] for i in range(0, min(len(feat), len(freq)))}
+  # Create feature: value dictionaries
+  articleContentDict = {contentFeat[i]: contentFreq[i] for i in range(0, min(len(contentFeat), len(contentFreq)))}
+  articleTitleDict = {titleFeat[i]: titleFreq[i] for i in range(0, min(len(titleFeat), len(titleFreq)))}
 
   # Handle the snippets
   snippets = getSnippets()
@@ -54,14 +58,24 @@ def getScore(publisherId, articleId, language):
   scoredSnippets = {}
   for i in range(0, len(snippets)):
     snippetId = snippets[i].key.id
-    for key in articleDict.keys():
-      keyScore = articleDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
+
+    # Score content
+    for key in articleContentDict.keys():
+      keyScore = articleContentDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
       if(keyScore > 0):
         scoredSnippets[snippetId] = scoredSnippets.get(snippetId, {})
-        scoredSnippets[snippetId]['score'] = scoredSnippets[snippetId].get('score', 0) + keyScore
+        scoredSnippets[snippetId]['contentScore'] = scoredSnippets[snippetId].get('contentScore', 0) + keyScore
+        scoredSnippets[snippetId]['commonWords'] = scoredSnippets[snippetId].get('commonWords', set()) | {key}
+
+    # Scroe title
+    for key in articleTitleDict.keys():
+      keyScore = articleTitleDict[key] * snippetsDict.get(key, [0] * len(snippets))[i]
+      if(keyScore > 0):
+        scoredSnippets[snippetId] = scoredSnippets.get(snippetId, {})
+        scoredSnippets[snippetId]['titleScore'] = scoredSnippets[snippetId].get('titleScore', 0) + keyScore
         scoredSnippets[snippetId]['commonWords'] = scoredSnippets[snippetId].get('commonWords', set()) | {key}
 
   return scoredSnippets
 
 if __name__ == '__main__':
-  print(getScore('martech.zone', 'randy-stocklin-ecommerce'))
+  print(getScore('martech.zone', 'randy-stocklin-ecommerce', 'en'))

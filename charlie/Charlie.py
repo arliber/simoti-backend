@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # coding=utf8
 
-from charlie import snippetsScore
-
 # Add tags folder to modules path
 import sys
 sys.path.append('./')
 sys.path.append('../')
 
+from charlie import snippetsScore
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction import stop_words
 import numpy as np
 
-from tags import tagsScore
+from charlie import tagsScore
 from common.DAL import getSnippets, getArticleById
 from common.helpers import getStopWords
 
@@ -52,7 +52,7 @@ def findTopSnippet(totalDict):
     finalDict= {}
     topScore= 0
     topID= ''
-    for snippetId in totalDict.keys:
+    for snippetId in totalDict.keys():
         tagsText= snippetId['tagsTextScore'] * tagsTextWeight
         tagsTitle= snippetId['tagsTitleScore'] * tagsTitleWeight
         customText= snippetId['customTextScore'] * customTextWeight
@@ -95,7 +95,7 @@ def makeSnippetSelection(articleId, publisherId, language):
 
     #Compile the scores into one dict
     totalDict={}
-    for snippetID in tagsDict.keys:
+    for snippetID in tagsDict.keys():
         allScoresDict={}
         allScoresDict['tagsTextScore']= tagsDict[snippetID]['textScore']
         allScoresDict['tagsTitleScore']= tagsDict[snippetID]['titleScore']
@@ -117,5 +117,6 @@ def makeSnippetSelection(articleId, publisherId, language):
 
 
 if __name__ == '__main__':
-  print(snippetsScore.getScore('martech.zone', 'ecommerce-shipping-options'))
-  print(tagsScore.getTagScores('martech.zone', 'ecommerce-shipping-options'))
+  #print(snippetsScore.getScore('martech.zone', 'ecommerce-shipping-options'))
+  #print(tagsScore.getTagScores('martech.zone', 'ecommerce-shipping-options'))
+  makeSnippetSelection('business-case-for-dam', 'martech.zone', 'en')

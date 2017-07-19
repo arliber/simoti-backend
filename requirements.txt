@@ -11,4 +11,8 @@ scikit-learn==0.18.2
 beautifulsoup4==4.6.0
 tweepy==3.5.0
 nltk==3.2.4
+<<<<<<< HEAD
 regex==2017.7.11
+=======
+regex=2.4.127
+>>>>>>> 8c239c13bdac31c3a0232621a705cce8e69ba34d

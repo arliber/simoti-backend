@@ -69,12 +69,21 @@ def getNGrams(word, corpus, language='en'):
   Returns:
     A set of all bigrams and trigrams in articles
   '''
+<<<<<<< HEAD
 
   preBigrams = re.findall(r'(\p{L}+\s+'+re.escape(word)+r')', corpus, re.M|re.I)
   sufBigrams = re.findall(r'('+re.escape(word)+r'\s+\p{L}+)', corpus, re.M|re.I)
   preTrigrams = re.findall(r'(\p{L}+\s+\p{L}+\s+'+re.escape(word)+r')', corpus, re.M|re.I)
   sufTrigram = re.findall(r'('+re.escape(word)+r'\s+\p{L}+\s+\p{L}+)', corpus, re.M|re.I)
 
+=======
+  
+  preBigrams = re.findall(r'(\p{L}+\s+'+re.escape(word)+r')', corpus, re.M|re.I)
+  sufBigrams = re.findall(r'('+re.escape(word)+r'\s+\p{L}+)', corpus, re.M|re.I)
+  preTrigrams = re.findall(r'(\p{L}+\s+\p{L}+\s+'+re.escape(word)+r')', corpus, re.M|re.I)
+  sufTrigram = re.findall(r'('+re.escape(word)+r'\s+\p{L}+\s+\p{L}+)', corpus, re.M|re.I)
+
+>>>>>>> 8c239c13bdac31c3a0232621a705cce8e69ba34d
   nGrams = preBigrams + sufBigrams + preTrigrams + sufTrigram
   nGrams = [ngram for ngram in nGrams if re.findall(r'(\w+)', ngram, re.M|re.I)[-1] not in getStopWords(language)]
   nGrams = [ngram for ngram in nGrams if re.findall(r'(\w+)', ngram, re.M|re.I)[0] not in getStopWords(language)]
@@ -101,12 +110,20 @@ def getPhrases(features, articles, language='en'):
 
   phrases = {}
   for i in range(0, len(features)):
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 8c239c13bdac31c3a0232621a705cce8e69ba34d
       originalScore = features[i][1]
       loweredScore = originalScore * config.snippetsKeywordsBuilder['nGramsToDupNgramsRation']
 
       (duplicateNGrams, uniqueNGrams) = getNGrams(features[i][0], corpus, language)
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 8c239c13bdac31c3a0232621a705cce8e69ba34d
       phrases[originalScore] = phrases.get(originalScore, set()) | duplicateNGrams
       phrases[loweredScore] = phrases.get(loweredScore, set()) | uniqueNGrams
 
@@ -187,8 +204,13 @@ def setSnippetWeightedKeywords(snippetId):
   if len(articles):
       # Build TF-IDF matrix
       stopWords = getStopWords(snippet['language'])
+<<<<<<< HEAD
       vectorizer = TfidfVectorizer(max_df=0.6,
                                    min_df=0.2,
+=======
+      vectorizer = TfidfVectorizer(max_df=0.6, 
+                                   min_df=0.2, 
+>>>>>>> 8c239c13bdac31c3a0232621a705cce8e69ba34d
                                    ngram_range=(1, 3),
                                    lowercase=True,
                                    max_features=config.snippetsKeywordsBuilder['maxFeatures'],

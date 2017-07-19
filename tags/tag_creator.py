@@ -93,7 +93,6 @@ def searchTwitter(tag0, tag1):
 def createCustomTag(tagName):
     global n
     global c
-    global badtags
 
     wordPouch= searchTwitter(tagName, None)   #Retrieve Twitter wordPouch
 

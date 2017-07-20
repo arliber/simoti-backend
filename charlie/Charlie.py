@@ -6,13 +6,12 @@ import sys
 sys.path.append('./')
 sys.path.append('../')
 
-from charlie import snippetsScore
+from charlie import snippetsScore, tagsScore
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction import stop_words
 import numpy as np
 
-from charlie import tagsScore
 from common.DAL import getSnippets, getArticleById
 from common.helpers import getStopWords
 
@@ -42,30 +41,30 @@ def getFrequencyMatrix(article, language):
 def findTopSnippet(totalDict):
 
     # Weighting values we can play with
-    tagsTextWeight= .5          #Related words to tags and article text
-    tagsTitleWeight= 25         #Related words to tags and article title
-    customTextWeight= .285714   #Related words to custom tags and article text
-    customTitleWeight= 10.714   #Related words to custom tags and article title
-    snippetsTextWeight= .075    #Related words to snippet title and article text
-    snippetsTitleWeight= 3.125  #Related words to snippet title and article title
+    tagsTextWeight= 5          #Related words to tags and article text
+    tagsTitleWeight= 250         #Related words to tags and article title
+    customTextWeight= 2.85714   #Related words to custom tags and article text
+    customTitleWeight= 107.14   #Related words to custom tags and article title
+    snippetsTextWeight= .75    #Related words to snippet title and article text
+    snippetsTitleWeight= 31.25  #Related words to snippet title and article title
 
     finalDict= {}
     topScore= 0
     topID= ''
     for snippetId in totalDict.keys():
-        tagsText= snippetId['tagsTextScore'] * tagsTextWeight
-        tagsTitle= snippetId['tagsTitleScore'] * tagsTitleWeight
-        customText= snippetId['customTextScore'] * customTextWeight
-        customTitle= snippetId['customTitleScore'] * customTitleWeight
-        snippetsText= snippetId['snippetTextScore'] * snippetsTextWeight
-        snippetsTitle= snippetId['snippetTitleScore'] * snippetsTitleWeight
+        tagsText= totalDict[snippetId].get('tagsTextScore',0) * tagsTextWeight
+        tagsTitle= totalDict[snippetId].get('tagsTitleScore',0) * tagsTitleWeight
+        customText= totalDict[snippetId].get('customTextScore',0) * customTextWeight
+        customTitle= totalDict[snippetId].get('customTitleScore',0) * customTitleWeight
+        snippetsText= totalDict[snippetId].get('snippetTextScore',0) * snippetsTextWeight
+        snippetsTitle= totalDict[snippetId].get('snippetTitleScore',0) * snippetsTitleWeight
         score= tagsText+tagsTitle+customText+customTitle+snippetsText+snippetsTitle
 
         if score > topScore:
             topScore= score
             topID= snippetId
 
-        finalDict['snippetId']= "Total: {} , Individual: {} {} {} {} {} {}...".format(score,tagsText,tagsTitle,customText,customTitle,snippetsText,snippetsTitle)
+        finalDict['snippetId']= "SnippetId: {} , Total Score: {} , Individual Scores: ( {} {} {} {} {} {} )".format(snippetId,score,tagsText,tagsTitle,customText,customTitle,snippetsText,snippetsTitle)
     print(finalDict)
 
     topSnippet={}
@@ -88,32 +87,33 @@ def makeSnippetSelection(articleId, publisherId, language):
     articleContentDict = {contentFeat[i]: contentFreq[i] for i in range(0, min(len(contentFeat), len(contentFreq)))}
     articleTitleDict = {titleFeat[i]: titleFreq[i] for i in range(0, min(len(titleFeat), len(titleFreq)))}
 
-    #Handle snippets
+    #Handle snippets using snippetsScore.py and tagsScore.py
     snippetEntities= getSnippets()
     snippetDict= snippetsScore.getScore(snippetEntities, articleContentDict, articleTitleDict)
     tagsDict= tagsScore.getTagScores(snippetEntities, articleContentDict, articleTitleDict)
 
     #Compile the scores into one dict
     totalDict={}
-    for snippetID in tagsDict.keys():
+    idList= set(tagsDict.keys()) | set(snippetDict.keys())
+    for snippetId in idList:
         allScoresDict={}
-        allScoresDict['tagsTextScore']= tagsDict[snippetID]['textScore']
-        allScoresDict['tagsTitleScore']= tagsDict[snippetID]['titleScore']
-        allScoresDict['customTextScore']= tagsDict[snippetID]['customTextScore']
-        allScoresDict['customTitleScore']= tagsDict[snippetID]['customTitleScore']
-        allScoresDict['snippetTextScore']= snippetDict[snippetID]['contentScore']
-        allScoresDict['snippetTitleScore']= snippetDict[snippetID]['titleScore']
-        totalDict[snippetID]= allScoresDict
+        if snippetId in tagsDict:
+            allScoresDict['tagsTextScore']= tagsDict[snippetId]['textScore']
+            allScoresDict['tagsTitleScore']= tagsDict[snippetId]['titleScore']
+            allScoresDict['customTextScore']= tagsDict[snippetId]['customTextScore']
+            allScoresDict['customTitleScore']= tagsDict[snippetId]['customTitleScore']
+        if snippetId in snippetDict:
+            allScoresDict['snippetTextScore']= snippetDict[snippetId].get('contentScore',0)
+            allScoresDict['snippetTitleScore']= snippetDict[snippetId].get('titleScore',0)
+        totalDict[snippetId]= allScoresDict
 
     #Return snippet with highest overall score
     topSnippet= findTopSnippet(totalDict)
 
     #Only match snippet if score is above threshold
     if topSnippet['score'] > scoreThreshold:
-        print(topSnippet['snippetId'])
-        print(topSnippet['score'])
-        return True
-    return False
+        return (True, topSnippet['snippetId'])
+    return (False, "")
 
 
 if __name__ == '__main__':

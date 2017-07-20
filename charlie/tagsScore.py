@@ -64,14 +64,16 @@ def getTagScores(snippets, articleDict, titleDict):
                     currentCustomTitleScore+= ctitleScore
 
         #Save the four different scores for the current snippet
-        #as well as the words which contributed to the score
-        snippetDict={}
-        snippetDict['textScore']= currentSnippetScore
-        snippetDict['titleScore']= currentTitleScore
-        snippetDict['customTextScore']= currentCustomScore
-        snippetDict['customTitleScore']= currentCustomTitleScore
-        snippetDict['commonWords']= commonWords
-        snippetScores.append(snippetDict)
+        #as well as the words which contributed to the score if
+        #at least one of the four scores is nonzero
+        if currentSnippetScore > 0 or currentTitleScore > 0 or currentCustomScore > 0 or currentCustomTitleScore > 0:
+            snippetDict={}
+            snippetDict['textScore']= currentSnippetScore
+            snippetDict['titleScore']= currentTitleScore
+            snippetDict['customTextScore']= currentCustomScore
+            snippetDict['customTitleScore']= currentCustomTitleScore
+            snippetDict['commonWords']= commonWords
+            snippetScores.append(snippetDict)
 
     #Create dictionary such that:
     #key: snippet ID

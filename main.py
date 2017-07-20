@@ -67,8 +67,8 @@ def charlie():
   if not data or not articleId or not publisherId or not language:
       return Response(response='Incorrect data supplied to charlie', status=500)
 
-  success= Charlie.makeSnippetSelection(articleId, publisherId, language)
-  return json.dumps({"success": success})
+  (success, snippetId) = Charlie.makeSnippetSelection(articleId, publisherId, language)
+  return json.dumps({"success": success, "snippetID": snippetId})
 
 
 # This is only used when running locally. When running live, gunicorn runs

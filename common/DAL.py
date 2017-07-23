@@ -96,3 +96,6 @@ def getSnippets():
 
 def saveEntity(entity):
   ds.put(entity)
+
+def getEmbeddedEntityObject():
+  return datastore.Entity(key=ds.key('EmbeddedKind'))

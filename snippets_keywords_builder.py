@@ -200,7 +200,7 @@ def setSnippetWeightedKeywords(snippetId):
       topFeatures = getTopNFeatures(vectorizer, TfIdfMatrix)
       print('Top features are:', topFeatures)
 
-      topFeaturesNormalized = [(feature[0],feature[1]/topFeatures[0][1]) for feature in topFeatures]
+      topFeaturesNormalized = [(feature[0],feature[1]/topFeatures[0][1]) for feature in topFeatures] #topFeatures[0][1] is the max value (ordered list)
       print('Top features normazlied:', topFeaturesNormalized)
 
       weightedNGrams = getPhrases(topFeaturesNormalized, articles, snippet['language'])

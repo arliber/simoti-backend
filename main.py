@@ -9,6 +9,7 @@ import article_scraper
 import snippets_keywords_builder
 from tags import tag_creator
 from charlie import Charlie
+from charlie import snippetApplication
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -67,8 +68,13 @@ def charlie():
   if not data or not articleId or not publisherId or not language:
       return Response(response='Incorrect data supplied to charlie', status=500)
 
-  (success, snippetId) = Charlie.makeSnippetSelection(articleId, publisherId, language)
-  return json.dumps({"success": success, "snippetID": snippetId})
+  selectedSnippet = Charlie.makeSnippetSelection(articleId, publisherId, language)
+  print('selectedSnippet', selectedSnippet)
+  if selectedSnippet is not None:
+    snippetApplication.applySnippet(articleId, publisherId, selectedSnippet['snippetId'], selectedSnippet['commonWords'])
+    return json.dumps({'snippetId': selectedSnippet['snippetId']})
+  else:
+    return json.dumps({})
 
 
 # This is only used when running locally. When running live, gunicorn runs

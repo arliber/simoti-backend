@@ -68,10 +68,12 @@ def charlie():
   if not data or not articleId or not publisherId or not language:
       return Response(response='Incorrect data supplied to charlie', status=500)
 
+  # Start logic
   selectedSnippet = Charlie.makeSnippetSelection(articleId, publisherId, language)
   print('selectedSnippet', selectedSnippet)
   if selectedSnippet is not None:
     snippetApplication.applySnippet(articleId, publisherId, selectedSnippet['snippetId'], selectedSnippet['commonWords'])
+    requests.post('https://snips.simoti.co/applySnippet', json = {"snippetId": selectedSnippet['snippetId'], "publisherId": publisherId, "articleId": articleId})
     return json.dumps({'snippetId': selectedSnippet['snippetId']})
   else:
     return json.dumps({})

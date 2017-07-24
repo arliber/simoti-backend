@@ -47,4 +47,4 @@ def getScore(snippets, articleContentDict, articleTitleDict):
 
 
 if __name__ == '__main__':
-  print(getScore('martech.zone', 'randy-stocklin-ecommerce', 'en'))
+  print(getScore('martech.zone', '10-facts-will-surprise-social-media', 'en'))

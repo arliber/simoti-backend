@@ -59,7 +59,7 @@ def getTagScores(snippets, articleDict, titleDict):
                 cwordScore= cpouch[cword] * articleDict.get(cword, 0)
                 ctitleScore= cpouch[cword] * titleDict.get(cword, 0)
                 if cwordScore > 0 or ctitleScore > 0:
-                    commonWords.append(cword + ' (custom)')
+                    commonWords.append(cword) #  + ' (custom)'
                     currentCustomScore+= cwordScore
                     currentCustomTitleScore+= ctitleScore
 
@@ -67,12 +67,12 @@ def getTagScores(snippets, articleDict, titleDict):
         #as well as the words which contributed to the score if
         #at least one of the four scores is nonzero
         if currentSnippetScore > 0 or currentTitleScore > 0 or currentCustomScore > 0 or currentCustomTitleScore > 0:
-            snippetDict={}
-            snippetDict['textScore']= currentSnippetScore
-            snippetDict['titleScore']= currentTitleScore
-            snippetDict['customTextScore']= currentCustomScore
-            snippetDict['customTitleScore']= currentCustomTitleScore
-            snippetDict['commonWords']= commonWords
+            snippetDict = {}
+            snippetDict['textScore'] = currentSnippetScore
+            snippetDict['titleScore'] = currentTitleScore
+            snippetDict['customTextScore'] = currentCustomScore
+            snippetDict['customTitleScore'] = currentCustomTitleScore
+            snippetDict['commonWords'] = commonWords
             snippetScores.append(snippetDict)
 
     #Create dictionary such that:

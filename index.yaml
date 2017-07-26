@@ -1,0 +1,12 @@
+# More info: https://cloud.google.com/appengine/docs/flexible/python/configuring-datastore-indexes-with-index-yaml
+indexes:
+
+- kind: articles
+  ancestor: yes
+  properties:
+  - name: title
+  - name: url
+  - name: status
+  - name: snippetId
+  - name: createDate
+  - name: updateDate

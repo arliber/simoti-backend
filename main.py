@@ -10,6 +10,7 @@ import snippets_keywords_builder
 from tags import tag_creator
 from charlie import Charlie
 from charlie import snippetApplication
+from time import sleep, time
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -22,7 +23,9 @@ app.config.from_object(config)
 # Receive POST from ad server and begin scrape/snippet matching process
 @app.route('/scrapeArticle', methods=['POST'])
 def scrapeArticle():
+  
   data = request.get_json()
+  print('/scrapeArticle - starting with data ', data)
 
   publisherId = data.get('publisherId')
   articleId = data.get('articleId')
@@ -30,9 +33,12 @@ def scrapeArticle():
   language = data.get('language')
 
   if not data or not publisherId or not articleId or not articleUrl or not language:
+      print('/scrapeArticle - missing some data, got ', data)
       return Response(response= 'Missing data', status= 400)
 
   article = article_scraper.process(publisherId, articleId, articleUrl, language)
+  print('/scrapeArticle - scraped article [{}] from [{}] of length {} for publisher {}'.format(articleId, articleUrl, len(article), publisherId))
+
   return json.dumps({'article': article})
 
 @app.route('/buildSnippetKeywords', methods=['POST'])
@@ -73,11 +79,22 @@ def charlie():
   print('selectedSnippet', selectedSnippet)
   if selectedSnippet is not None:
     snippetApplication.applySnippet(articleId, publisherId, selectedSnippet['snippetId'], selectedSnippet['commonWords'])
-    requests.post('https://snips.simoti.co/applySnippet', json = {"snippetId": selectedSnippet['snippetId'], "publisherId": publisherId, "articleId": articleId})
+    postResult = requests.post('https://snips.simoti.co/applySnippet', json = {"snippetId": selectedSnippet['snippetId'], "publisherId": publisherId, "articleId": articleId})
     return json.dumps({'snippetId': selectedSnippet['snippetId']})
   else:
     return json.dumps({})
 
+@app.route('/adServerPing', methods=['GET'])
+def adServerPing():
+  print('/adServerPing: PING AD SERVER')
+  startTime = time()
+  i = 0
+  while time() < startTime + 50:
+    i += 1
+    requests.get('https://snips.simoti.co/getSnippet')
+
+  print('/adServerPing: performed {} pings'.format(i))
+  return json.dumps({'i': i, 'time': time() - startTime})
 
 # This is only used when running locally. When running live, gunicorn runs
 # the application.

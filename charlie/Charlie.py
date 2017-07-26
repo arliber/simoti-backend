@@ -57,40 +57,46 @@ def makeSnippetSelection(articleId, publisherId, language):
 
     # Handle article
     article = getArticleById(publisherId, articleId)
-    (contentFreq, contentFeat) = getFrequencyMatrix([article['content']], language)
-    (titleFreq, titleFeat) = getFrequencyMatrix([article['title']], language)
-    # Create feature: value dictionaries
-    articleContentDict = {contentFeat[i]: contentFreq[i] for i in range(0, min(len(contentFeat), len(contentFreq)))}
-    articleTitleDict = {titleFeat[i]: titleFreq[i] for i in range(0, min(len(titleFeat), len(titleFreq)))}
+    
+    if article['status'] == 'assigned':
+        print('Charlie - makeSnippetSelection: article [{}][{}]is already assigned'.format(publisherId, articleId))
+        return None
+    else:
+        print('Charlie - makeSnippetSelection: working on article [{}][{}]'.format(publisherId, articleId))
+        (contentFreq, contentFeat) = getFrequencyMatrix([article['content']], language)
+        (titleFreq, titleFeat) = getFrequencyMatrix([article['title']], language)
+        # Create feature: value dictionaries
+        articleContentDict = {contentFeat[i]: contentFreq[i] for i in range(0, min(len(contentFeat), len(contentFreq)))}
+        articleTitleDict = {titleFeat[i]: titleFreq[i] for i in range(0, min(len(titleFeat), len(titleFreq)))}
 
-    #Handle snippets using snippetsScore.py and tagsScore.py
-    snippetEntities= getSnippets()
-    snippetDict = snippetsScore.getScore(snippetEntities, articleContentDict, articleTitleDict)
-    tagsDict = tagsScore.getTagScores(snippetEntities, articleContentDict, articleTitleDict)
+        #Handle snippets using snippetsScore.py and tagsScore.py
+        snippetEntities= getSnippets()
+        snippetDict = snippetsScore.getScore(snippetEntities, articleContentDict, articleTitleDict)
+        tagsDict = tagsScore.getTagScores(snippetEntities, articleContentDict, articleTitleDict)
 
-    #Compile the scores into one dict
-    totalDict = {}
-    idList = set(tagsDict.keys()) | set(snippetDict.keys())
-    for snippetId in idList:
-        allScoresDict = {}
-        if snippetId in tagsDict:
-            allScoresDict['tagsTextScore']= tagsDict[snippetId]['textScore']
-            allScoresDict['tagsTitleScore']= tagsDict[snippetId]['titleScore']
-            allScoresDict['customTextScore']= tagsDict[snippetId]['customTextScore']
-            allScoresDict['customTitleScore']= tagsDict[snippetId]['customTitleScore']
-            allScoresDict['commonWords'] = allScoresDict.get('commonWords', set()) | set(tagsDict[snippetId]['commonWords'])
+        #Compile the scores into one dict
+        totalDict = {}
+        idList = set(tagsDict.keys()) | set(snippetDict.keys())
+        for snippetId in idList:
+            allScoresDict = {}
+            if snippetId in tagsDict:
+                allScoresDict['tagsTextScore']= tagsDict[snippetId]['textScore']
+                allScoresDict['tagsTitleScore']= tagsDict[snippetId]['titleScore']
+                allScoresDict['customTextScore']= tagsDict[snippetId]['customTextScore']
+                allScoresDict['customTitleScore']= tagsDict[snippetId]['customTitleScore']
+                allScoresDict['commonWords'] = allScoresDict.get('commonWords', set()) | set(tagsDict[snippetId]['commonWords'])
 
-        if snippetId in snippetDict:
-            allScoresDict['snippetTextScore']= snippetDict[snippetId]['contentScore']
-            allScoresDict['snippetTitleScore']= snippetDict[snippetId]['titleScore']
-            allScoresDict['commonWords'] = allScoresDict.get('commonWords', set()) | set(snippetDict[snippetId]['commonWords'])
+            if snippetId in snippetDict:
+                allScoresDict['snippetTextScore']= snippetDict[snippetId]['contentScore']
+                allScoresDict['snippetTitleScore']= snippetDict[snippetId]['titleScore']
+                allScoresDict['commonWords'] = allScoresDict.get('commonWords', set()) | set(snippetDict[snippetId]['commonWords'])
 
-        totalDict[snippetId]= allScoresDict
+            totalDict[snippetId]= allScoresDict
 
-    #Return snippet with highest overall score
-    topSnippet = findTopSnippet(totalDict)
+        #Return snippet with highest overall score
+        topSnippet = findTopSnippet(totalDict)
 
-    return topSnippet if topSnippet['score'] > config.CHARLIE['scoreThreshold'] else None 
+        return topSnippet if topSnippet['score'] > config.CHARLIE['scoreThreshold'] else None 
 
 
 if __name__ == '__main__':  

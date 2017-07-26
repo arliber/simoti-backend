@@ -44,7 +44,7 @@ def scrape(url, language='en'):
           success = True
           break
       except BaseException as e:
-          print('Error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
+          print('helpers - scrape: error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
           pass
 
   return (page.text, page.title) if success else ('','')

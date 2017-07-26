@@ -28,7 +28,11 @@ def updateArticleEnt(publisherId, articleId, content, title):
 
 #Sends post request to snippet-matching function
 def initiatePost(articleId, publisherId, lang):
-    requests.post('https://simoti-171512.appspot.com/charlie', json = {"articleId": articleId,"publisherId": publisherId, "lang": lang})
+    try:
+      requests.post('https://simoti-171512.appspot.com/charlie', json = {"articleId": articleId,"publisherId": publisherId, "lang": lang})
+      print('article-scraper - initiatePost: request to charlie was sent')
+    except BaseException as e:
+      print('article-scraper - initiatePost: unable to call Charlie ', str(e))
 
 def process(publisherId, articleId, articleUrl, language):
   '''Scrapes the article, updates the Article entity in datastore, and then initiates smart snippet-matching function
@@ -42,9 +46,12 @@ def process(publisherId, articleId, articleUrl, language):
   Returns:
     content (str): text from article
   '''
+  print('article-scraper - process: started for publisher [{}] article [{}] from [{}]'.format(publisherId, articleId, articleUrl))
+
   (content, title) = scrape(articleUrl, language)
   updateArticleEnt(publisherId, articleId, content, title)
-  initiatePost(articleId, publisherId, language)
+  #initiatePost(articleId, publisherId, language)
+
   return content
 
 # Execute if run independantly

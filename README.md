@@ -11,9 +11,12 @@ Logan Horowitz, Arik Liber
 
 Simoti Co.
 
-## Deploy
+## Deploy app
 
 `gcloud app deploy`
+
+## Deploy indexes
+`gcloud app deploy index.yaml`
 
 ## TO DO
 

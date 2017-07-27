@@ -1,4 +1,4 @@
 cron:
-- description: Keep ads server warm and cozy
-  url: /adServerPing
-  schedule: every 1 minutes
+#- description: Keep ads server warm and cozy
+#  url: /adServerPing
+#  schedule: every 1 minutes

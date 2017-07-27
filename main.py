@@ -89,9 +89,9 @@ def adServerPing():
   print('/adServerPing: PING AD SERVER')
   startTime = time()
   i = 0
-  while time() < startTime + 50:
+  while time() < startTime + 25:
     i += 1
-    requests.get('https://snips.simoti.co/getSnippet')
+    requests.get('https://snips.simoti.co/getSnippet', headers={'referer': 'http://www.tgspot.co.il/oneplus-5-is-now-official/'})
 
   print('/adServerPing: performed {} pings'.format(i))
   return json.dumps({'i': i, 'time': time() - startTime})

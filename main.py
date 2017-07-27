@@ -44,11 +44,12 @@ def scrapeArticle():
 @app.route('/buildSnippetKeywords', methods=['POST'])
 def buildSnippetKeywords():
   data = request.get_json()
-  snippetId = data.get('snippetId')
-  if not data or not snippetId:
-      return Response(response= 'No snippet id supplied', status=404)
+  snippetIds = data.get('snippetIds')
 
-  res = snippets_keywords_builder.setSnippetWeightedKeywords(snippetId)
+  if not data or not snippetIds:
+      snippetIds = snippets_keywords_builder.getUnprocessedSnippetIds()
+      
+  res = snippets_keywords_builder.setMultipleSnippetWeightedKeywords(snippetIds)
   return json.dumps({'summary': res})
 
 @app.route('/createTags', methods=['POST'])

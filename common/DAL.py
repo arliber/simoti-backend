@@ -81,6 +81,22 @@ def getSnippetById(snippetId):
   snippet = ds.get(key=snippetKey)
   return snippet
 
+def getUnprocessedSnippets():
+  ''' Get a snippet by id from Datastore
+
+  Args:
+    snippetId (int): Snippet ID
+
+  Returns:
+    Snippet entity
+  '''
+  query = ds.query(kind='snippets')
+  #query.add_filter('wordPouch', '=', 'empty') #Datastore sucks, filter doesn't work
+  snippets = list(query.fetch())
+  snippets = [snip for snip in snippets if len(snip['wordPouch']) == 1]
+  
+  return snippets
+
 def getSnippets():
   ''' Get all active snippets
 

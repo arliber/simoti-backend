@@ -15,7 +15,7 @@ import json
 
 # Custom modules
 from helpers import getStopWords, scrape
-from DAL import getSnippetById, saveEntity
+from DAL import getSnippetById, saveEntity, getUnprocessedSnippets
 import config
 
 
@@ -31,7 +31,12 @@ def getQueryUrls(query, language = 'en'):
   queryUrl = 'https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}'
   res = req.get(queryUrl.format(config.SEARCHENGINES[language]['key'], config.SEARCHENGINES[language]['id'], query))
   queryResults = res.json()
-  urls = [item['link'] for item in queryResults['items']]
+  if 'items' in queryResults:
+    urls = [item['link'] for item in queryResults['items']]
+  else:
+    urls = []
+    print('snippets_keywords_builder - getQueryUrls: no search results for [{}]'.format(query))
+
   return urls
 
 
@@ -164,6 +169,18 @@ def inspectMatrix(TfIdfMatrix, vectorizer):
   print('Matrix shape: ', TfIdfMatrix.shape)
   print('Most popular item is', features[index], 'with value', row[index] , 'at index', index)
 
+def getUnprocessedSnippetIds():
+  return [snip.key.id for snip in getUnprocessedSnippets()]
+  
+def setMultipleSnippetWeightedKeywords(snippetIds):
+  summaries = { }
+  print('snippets_keywords_builder - setMultipleSnippetWeightedKeywords: working on {} snippets'.format(len(snippetIds)))
+
+  for snippetId in snippetIds:
+    print('snippets_keywords_builder - setMultipleSnippetWeightedKeywords: working on snippet [{}]'.format(snippetId))
+    summaries[snippetId] = setSnippetWeightedKeywords(snippetId)
+
+  return summaries
 
 def setSnippetWeightedKeywords(snippetId):
   ''' Find, weight and save related bigrams and trigrams for selected snipept
@@ -214,4 +231,5 @@ def setSnippetWeightedKeywords(snippetId):
 
 # Exectue if run independantly
 if __name__ == '__main__':
-  print(setSnippetWeightedKeywords(5700305828184064)) #5682617542246400
+  #print(setSnippetWeightedKeywords(5700305828184064)) #5682617542246400
+  print(getUnprocessedSnippetIds())

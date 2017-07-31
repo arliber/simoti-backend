@@ -18,6 +18,9 @@ Simoti Co.
 ## Deploy indexes
 `gcloud app deploy index.yaml`
 
+## Deploy CRON
+`gcloud app deploy cron.yaml`
+
 ## TO DO
 
 - Normalize TF-IDF score

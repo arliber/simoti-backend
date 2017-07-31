@@ -2,3 +2,6 @@ cron:
 #- description: Keep ads server warm and cozy
 #  url: /adServerPing
 #  schedule: every 1 minutes
+- description: Build snippet keywords
+  url: /buildSnippetKeywords
+  schedule: every 10 minutes

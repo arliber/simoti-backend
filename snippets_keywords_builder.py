@@ -194,8 +194,9 @@ def setSnippetWeightedKeywords(snippetId):
   snippet = getSnippetById(snippetId)
   print('Found snippet id [', snippetId, ']')
 
-  urls = getQueryUrls(snippet['title'], snippet['language'])
-  print('Found {} search results for [{}]'.format(len(urls), snippet['title']))
+  searchQuery = snippet.get('searchQuery', snippet.get('title', ''))
+  urls = getQueryUrls(searchQuery, snippet['language'])
+  print('Found {} search results for [{}]'.format(len(urls), searchQuery))
   print(urls)
 
   articles = [scrape(url, snippet['language'])[0] for url in urls if not re.compile(r'\.pdf$', re.M|re.I).search(url)]

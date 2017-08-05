@@ -32,6 +32,7 @@ def scrape(url, language='en'):
   Returns:
     Parsed text if succeeds, empty string otherwise
   '''
+  print('helpers - scrape: working on [{}] in language [{}]'.format(url, language))
   page = Article(url = url, language = language)
   attempts = 0
   success = False
@@ -41,8 +42,11 @@ def scrape(url, language='en'):
           attempts += 1
           page.download()
           page.parse()
-          success = True
-          break
+          if page.text and page.text != '':
+            success = True
+            break
+          else:
+            print('helpers - scrape: no contnet on page {}, attempt #{}'.format(url, attempts))
       except BaseException as e:
           print('helpers - scrape: error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
           pass

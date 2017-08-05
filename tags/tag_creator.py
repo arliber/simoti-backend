@@ -173,3 +173,6 @@ def parseXML(topTag):
         soup = BS(fp, "lxml")
         createTagFromTree(getattr(soup, topTag))
     return badTags
+
+if __name__ == '__main__':
+  parseXML('fashion')

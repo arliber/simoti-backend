@@ -18,6 +18,7 @@ from common.helpers import getStopWords
 
 
 def getFrequencyMatrix(article, language):
+  print('Charlie - getFrequencyMatrix: language [{}], article'.format(language), article)
   stopWords = getStopWords(language)
   vectorizer = TfidfVectorizer(ngram_range=(1, 3),
                                   lowercase=True,
@@ -41,13 +42,14 @@ def findTopSnippet(totalDict):
         snippetsTitle = totalDict[snippetId].get('snippetTitleScore',0) * config.CHARLIE['snippetsTitleWeight']
         score = tagsText+tagsTitle+customText+customTitle+snippetsText+snippetsTitle
 
+        print('Charlie - findTopSnippet: SnippetId: {} , Total Score: {} , Individual Scores: ( {} {} {} {} {} {} )'.format(snippetId,score,tagsText,tagsTitle,customText,customTitle,snippetsText,snippetsTitle))
+
         if score > topSnippet.get('score', 0):
             topSnippet['snippetId'] = snippetId
             topSnippet['score'] = score
             topSnippet['commonWords'] = totalDict[snippetId]['commonWords']
 
-    print('Charlie - findTopSnippet: SnippetId: {} , Total Score: {} , Individual Scores: ( {} {} {} {} {} {} )'.format(snippetId,score,tagsText,tagsTitle,customText,customTitle,snippetsText,snippetsTitle))
-
+    print('Charlie - findTopSnippet: selected snippet ', topSnippet)
     return topSnippet
 
 
@@ -63,14 +65,19 @@ def makeSnippetSelection(articleId, publisherId, language):
         return None
     else:
         print('Charlie - makeSnippetSelection: working on article [{}][{}]'.format(publisherId, articleId))
+        if article['content'] == '':
+            print('Charlie - makeSnippetSelection: content is empty')
+            return None
+
         (contentFreq, contentFeat) = getFrequencyMatrix([article['content']], language)
+        title = article.get('searchQuery', article.get('title', ''))
         (titleFreq, titleFeat) = getFrequencyMatrix([article['title']], language)
         # Create feature: value dictionaries
         articleContentDict = {contentFeat[i]: contentFreq[i] for i in range(0, min(len(contentFeat), len(contentFreq)))}
         articleTitleDict = {titleFeat[i]: titleFreq[i] for i in range(0, min(len(titleFeat), len(titleFreq)))}
 
         #Handle snippets using snippetsScore.py and tagsScore.py
-        snippetEntities= getSnippets()
+        snippetEntities = getSnippets()
         snippetDict = snippetsScore.getScore(snippetEntities, articleContentDict, articleTitleDict)
         tagsDict = tagsScore.getTagScores(snippetEntities, articleContentDict, articleTitleDict)
 
@@ -87,8 +94,8 @@ def makeSnippetSelection(articleId, publisherId, language):
                 allScoresDict['commonWords'] = allScoresDict.get('commonWords', set()) | set(tagsDict[snippetId]['commonWords'])
 
             if snippetId in snippetDict:
-                allScoresDict['snippetTextScore']= snippetDict[snippetId]['contentScore']
-                allScoresDict['snippetTitleScore']= snippetDict[snippetId]['titleScore']
+                allScoresDict['snippetTextScore'] = snippetDict[snippetId].get('contentScore', 0)
+                allScoresDict['snippetTitleScore'] = snippetDict[snippetId].get('titleScore', 0)
                 allScoresDict['commonWords'] = allScoresDict.get('commonWords', set()) | set(snippetDict[snippetId]['commonWords'])
 
             totalDict[snippetId]= allScoresDict
@@ -96,9 +103,9 @@ def makeSnippetSelection(articleId, publisherId, language):
         #Return snippet with highest overall score
         topSnippet = findTopSnippet(totalDict)
 
-        return topSnippet if topSnippet['score'] > config.CHARLIE['scoreThreshold'] else None 
+        return topSnippet if topSnippet.get('score', 0) > config.CHARLIE['scoreThreshold'] else None 
 
 
 if __name__ == '__main__':  
   #print(makeSnippetSelection('business-case-for-dam', 'martech.zone', 'en'))
-  print(makeSnippetSelection('10-facts-will-surprise-social-media', 'martech.zone', 'en'))
+  print(makeSnippetSelection('185489', 'gadgety.co.il', 'he'))

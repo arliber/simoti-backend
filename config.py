@@ -29,7 +29,7 @@ access_token_secret = 'EY5G6dmEXvGKoubm02MOYnZRPtnpSP5lf7M1q8xXTPEAf'
 
 # Charlie
 CHARLIE = { }
-CHARLIE['scoreThreshold'] = 1.0
+CHARLIE['scoreThreshold'] = 0.001
 CHARLIE['tagsTextWeight'] = 5          #Related words to tags and article text
 CHARLIE['tagsTitleWeight'] = 250       #Related words to tags and article title
 CHARLIE['customTextWeight'] = 2.85714  #Related words to custom tags and article text

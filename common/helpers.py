@@ -33,22 +33,26 @@ def scrape(url, language='en'):
     Parsed text if succeeds, empty string otherwise
   '''
   print('helpers - scrape: working on [{}] in language [{}]'.format(url, language))
-  page = Article(url = url, language = language)
+  if language != 'auto':
+    page = Article(url = url, language = language)
+  else:
+    page = Article(url = url)
+
   attempts = 0
   success = False
   # Exception raised following this bug: https://github.com/codelucas/newspaper/issues/357
-  while(attempts < 4):
-      try:
-          attempts += 1
-          page.download()
-          page.parse()
-          if page.text and page.text != '':
-            success = True
-            break
-          else:
-            print('helpers - scrape: no contnet on page {}, attempt #{}'.format(url, attempts))
-      except BaseException as e:
-          print('helpers - scrape: error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
-          pass
+  while(attempts < 6):
+    try:
+      attempts += 1
+      page.download()
+      page.parse()
+      if page.text and page.text != '' and len(page.text) > 120:
+        success = True
+        break
+      else:
+        print('helpers - scrape: no contnet on page [{}], attempt #{} with content [{}]'.format(url, attempts, '?????????'))
+    except BaseException as e:
+      print('helpers - scrape: error in parsing {}, attempt #{}'.format(url, attempts) , str(e))
+      pass
 
-  return (page.text, page.title) if success else ('','')
+  return (page.text, page.title) if success else ('', '')

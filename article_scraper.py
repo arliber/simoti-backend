@@ -21,7 +21,10 @@ def updateArticleEnt(publisherId, articleId, content, title):
   #Update article's content and status
   article_ent["title"]= title
   article_ent["content"]= content
-  article_ent["status"] = "scraped"
+  if content != '':
+    article_ent["status"] = "scraped"
+  else:
+    article_ent["status"] = "scrapeError"
 
   #Return updated article to datastore
   DAL.saveEntity(article_ent)

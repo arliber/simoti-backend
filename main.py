@@ -77,16 +77,44 @@ def charlie():
       return Response(response='Incorrect data supplied to charlie', status=500)
 
   # Start logic
-  selectedSnippet = Charlie.makeSnippetSelection(articleId, publisherId, language)
-  print('selectedSnippet', selectedSnippet)
-  if selectedSnippet is not None:
-    snippetApplication.applySnippet(articleId, publisherId, selectedSnippet['snippetId'], selectedSnippet['commonWords'])
-    postResult = requests.post('https://snips.simoti.co/applySnippet', json = {"snippetId": selectedSnippet['snippetId'], "publisherId": publisherId, "articleId": articleId})
-    return json.dumps({'snippetId': selectedSnippet['snippetId']})
+  charlieResult = Charlie.charlie(articleId, publisherId, language)
+  if charlieResult is not None:
+    return json.dumps({'snippetId': charlieResult})
   else:
     return json.dumps({})
 
-@app.route('/adServerPing', methods=['GET'])
+@app.route('/charlieLatest', methods=['POST', 'GET'])
+def charlieLatest():
+
+  charlieResult = Charlie.charlieBulk()
+  if charlieResult is not None:
+    return json.dumps({'result': charlieResult})
+  else:
+    return json.dumps({})
+
+@app.route('/applySnippet', methods=['POST'])
+def applySnippet():
+  data= request.get_json()
+  articleIds = data.get('articleIds')
+  publisherId = data.get('publisherId')
+  snippetId = data.get('snippetId')
+
+  if not data or not articleIds or not publisherId or not snippetId:
+    return Response(response='Incorrect data supplied to applySnippet', status=500)
+
+  articlesStatus = { }
+  # Start logic
+  for articleId in articleIds:
+    isSnippetApplied = snippetApplication.applySnippet(articleId, publisherId, snippetId, [])
+    if(isSnippetApplied):
+      requests.post('https://snips.simoti.co/applySnippet', json = {"snippetId": snippetId, "publisherId": publisherId, "articleId": articleId})
+      articlesStatus[articleId] = True
+    else:
+      articlesStatus[articleId] = False
+
+  return json.dumps(articlesStatus)
+
+'''@app.route('/adServerPing', methods=['GET'])
 def adServerPing():
   print('/adServerPing: PING AD SERVER')
   startTime = time()
@@ -96,7 +124,7 @@ def adServerPing():
     requests.get('https://snips.simoti.co/getSnippet', headers={'referer': 'http://www.tgspot.co.il/oneplus-5-is-now-official/'})
 
   print('/adServerPing: performed {} pings'.format(i))
-  return json.dumps({'i': i, 'time': time() - startTime})
+  return json.dumps({'i': i, 'time': time() - startTime})'''
 
 # This is only used when running locally. When running live, gunicorn runs
 # the application.

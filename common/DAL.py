@@ -4,6 +4,7 @@
 # Add tags folder to modules path
 import sys
 sys.path.append('./tags')
+from datetime import datetime
 import tag_creator
 
 from google.cloud import datastore
@@ -107,11 +108,74 @@ def getSnippets():
     Snippets
   '''
   query = ds.query(kind='snippets')
-  # query.add_filter('status', '=', 'active') # Doesn't work - WTYF?!!?
+  query.add_filter('status', '=', 'active') # Doesn't work - WTYF?!!?
   return list(query.fetch())
 
 def saveEntity(entity):
   ds.put(entity)
 
-def getEmbeddedEntityObject():
-  return datastore.Entity(key=ds.key('EmbeddedKind'))
+def articlesBeforeDate():
+  query = ds.query(kind='articles')
+  query_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+  query.add_filter('createDate', '>=', query_date)
+
+  articles = list(query.fetch())
+  
+  return articles
+
+def articlesByPublisher(publisherId):
+  ancestor = ds.key('publishers', publisherId)
+  query = ds.query(kind='articles', ancestor=ancestor)
+  return list(query.fetch())
+
+def getPublisherArticlesByStatus(publisherId, status):
+  query = ds.query(kind='articles')
+  query.add_filter('status', '=', status)
+  articles = list(query.fetch())
+  publisherArticles = [article for article in articles if article.key.parent.id_or_name == publisherId]
+  return publisherArticles
+
+def updateStatus(entities, status):
+  for ent in entities:
+    ent['status'] = status
+    saveEntity(ent)
+
+def getArticlesWithSnippet(snippetId):
+  query = ds.query(kind='articles')
+  query.add_filter('snippetId', '=', snippetId)
+  articles = list(query.fetch())
+  #publisherArticles = [article for article in articles if article.key.parent.id_or_name == publisherId]
+  return articles
+
+def updateArticlesSnippetStatus(articles, status):
+  for article in articles:
+    currentStatus = article['snippetProperties']['status']
+    print('DAL - updateArticlesSnippetStatus: updating staus [{}] => [{}] on snippet of article [{}]'.format(currentStatus, status, article.key.id_or_name))
+    article['snippetProperties']['status'] = status
+    saveEntity(article)
+
+if __name__ == '__main__':
+  #print(len(articlesBeforeDate()))
+  #print(len(getSnippets()))
+  
+  '''articles = getPublisherArticlesByStatus('gadgety.co.il', 'assigned')
+  print('TOTAL', len(articles))
+  for a in articles:
+    print(a.key.id_or_name, ' - ', a['snippetId'] if 'snippetId' in a else '?');'''
+  
+  #updateStatus(articles, 'inactive')
+
+  '''articles = getArticlesWithSnippet(5725107787923456)
+  print(len(articles))
+  updateArticlesSnippetStatus(articles, 'inactive')'''
+
+  articles = getArticlesWithSnippet(5769015641243648)
+  articles = [article for article in articles if article.key.parent.id_or_name == 'gadgety.co.il']
+  #print(len(articles))
+  updateArticlesSnippetStatus(articles, 'inactive')
+  #lenPerArticle = {article.key.id_or_name: len(article["content"].split(' ')) for article in articles}
+  #lengths = [len(article["content"].split(' ')) for article in articles]
+  #print(lenPerArticle)
+
+  
+  

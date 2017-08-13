@@ -85,9 +85,12 @@ def searchTwitter(tag0, tag1):
         query= str(tag0) + " #" + str(tag0) + " " + str(tag1) + " #" + str(tag1)
     #print(query)        #For debugging only
 
-    results = api.search(q=query, lang='en', result_type='mixed', count= 500)
-    textfile= str(tag0) + "," + str(tag1) + ".txt"  #For debugging only
-    return extractPouch(tag0, tag1, results, textfile)
+    try:
+        results = api.search(q=query, lang='en', result_type='mixed', count= 500)
+        textfile= str(tag0) + "," + str(tag1) + ".txt"  #For debugging only
+        return extractPouch(tag0, tag1, results, textfile)
+    except:
+        return []
 
 
 def createCustomTag(tagName):
@@ -96,7 +99,7 @@ def createCustomTag(tagName):
 
     wordPouch= searchTwitter(tagName, None)   #Retrieve Twitter wordPouch
 
-    if len(wordPouch[0]) < 10:
+    if len(wordPouch) == 0 or len(wordPouch[0]) < 10:
         #This is a bad tag
         return None
     else:
